@@ -19,19 +19,24 @@
             font-family: 'Consolas', monospace; margin: 0; padding: 20px;
             line-height: 1.5;
         }
+        
+        /* TOP BAR & PROFILE ICON */
         .top-bar { 
             display: flex; justify-content: flex-end; padding: 10px; 
             position: sticky; top: 0; background: rgba(0,0,0,0.9); z-index: 100; 
         }
         .profile-trigger { 
-            width: 40px; height: 40px; background: #2980b9; color: white; 
+            width: 45px; height: 45px; background: #2980b9; color: white; 
             border-radius: 50%; display: none; align-items: center; 
-            justify-content: center; cursor: pointer; border: 1px solid #fff; 
+            justify-content: center; cursor: pointer; border: 2px solid #fff;
+            font-size: 1.2rem; font-weight: bold; box-shadow: 0 0 10px rgba(255,255,255,0.2);
         }
         .dropdown { 
-            position: absolute; top: 60px; right: 10px; background: #111; 
-            border: 1px solid #333; padding: 15px; width: 220px; display: none; z-index: 1000; 
+            position: absolute; top: 65px; right: 10px; background: #111; 
+            border: 1px solid #333; padding: 15px; width: 220px; display: none; 
+            z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
+
         .page { display: none; max-width: 800px; margin: auto; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .active { display: block; }
@@ -53,7 +58,6 @@
         .btn-danger { border-color: var(--danger); color: var(--danger); }
         .btn-danger:hover { background: var(--danger); color: #fff; }
         .btn-admin { border-color: var(--admin); color: var(--admin); }
-        .btn-admin:hover { background: var(--admin); color: #fff; }
 
         .chat-box { height: 250px; overflow-y: auto; background: #050505; padding: 15px; border: 1px solid #222; margin-bottom: 10px; }
         .msg { margin-bottom: 10px; padding: 8px; font-size: 0.9rem; border-left: 3px solid #444; background: #080808; }
@@ -62,7 +66,7 @@
         .user-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; }
         .clickable-name { cursor: pointer; text-decoration: underline; color: #3498db; font-weight: bold; }
         
-        .ban-item { padding: 15px; border: 1px solid #333; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .ban-item { padding: 15px; border: 1px solid #333; margin-bottom: 10px; cursor: pointer; }
         .ban-item:hover { border-color: var(--danger); background: #1a0505; }
     </style>
 </head>
@@ -71,8 +75,9 @@
     <div class="top-bar">
         <div id="userProfile" class="profile-trigger" onclick="event.stopPropagation(); toggleDrop()">?</div>
         <div id="profileDropdown" class="dropdown">
-            <strong id="dropName">User</strong>
+            <strong id="dropName" style="display:block; font-size:1.1rem;">User</strong>
             <p id="dropTeamDisplay" style="font-size:0.75rem; color:#888; margin: 5px 0 15px 0;">Team: -</p>
+            <hr style="border:0; border-top:1px solid #222; margin-bottom:15px;">
             <button onclick="showPage('pageChats')">Meine Chats</button>
             <button onclick="location.reload()" style="margin-top:10px; border-color:var(--danger); color:var(--danger)">Logout</button>
         </div>
@@ -107,50 +112,46 @@
         </div>
         <div class="section">
             <h2>Projekt-Regeln</h2>
-            <textarea id="adminRegelnInput" rows="4" placeholder="Regeln hier eintragen..."></textarea>
-            <button onclick="saveRegeln()">Regeln für alle speichern</button>
+            <textarea id="adminRegelnInput" rows="4"></textarea>
+            <button onclick="saveRegeln()">Speichern</button>
         </div>
         <div class="section">
-            <h2>Support Tickets (Offen)</h2>
+            <h2>Support Tickets</h2>
             <div id="adminOpenTickets"></div>
         </div>
         <div class="section">
-            <h2>User-Verwaltung</h2>
-            <p style="font-size:0.75rem; color:#666;">Klicke auf einen Namen für Kick/Ban</p>
+            <h2>User-Liste (Klick für Kick/Ban)</h2>
             <div id="adminUserList"></div>
         </div>
     </div>
 
     <div id="pageAdminTools" class="page">
         <div class="section">
-            <h1>Blacklist Verwaltung</h1>
-            <p style="font-size:0.85rem;">Klicke auf einen Eintrag, um den User zu entbannen.</p>
+            <h1>Blacklist</h1>
             <div id="blacklistContainer"></div>
-            <button onclick="showPage('pageAdmin')" style="margin-top:20px;">Zurück zur Übersicht</button>
+            <button onclick="showPage('pageAdmin')" style="margin-top:20px;">Zurück</button>
         </div>
     </div>
 
     <div id="pageUserManage" class="page">
         <div class="section">
-            <h1>User bearbeiten</h1>
-            <p>Aktion für: <strong id="manageTargetName" style="color:var(--accent)">-</strong></p>
-            <button class="btn-danger" onclick="kickUser()">Account Kicken</button>
-            <div style="margin-top:10px; border-top: 1px solid #222; padding-top:10px;">
-                <button class="btn-danger" style="background: #330000;" onclick="banUser()">Permanent Bannen</button>
-            </div>
-            <button onclick="showPage('pageAdmin')" style="border-color:#555; color:#555; margin-top:20px;">Abbrechen</button>
+            <h1>User Management</h1>
+            <p>User: <strong id="manageTargetName" style="color:var(--accent)">-</strong></p>
+            <button class="btn-danger" onclick="kickUser()">Kicken</button>
+            <button class="btn-danger" style="background: #330000; margin-top:10px;" onclick="banUser()">Bannen</button>
+            <button onclick="showPage('pageAdmin')" style="border:none; margin-top:20px;">Abbrechen</button>
         </div>
     </div>
 
     <div id="pagePlayer" class="page">
         <div class="section">
-            <h1>Projekt Regeln</h1>
-            <div id="displayRegeln" style="white-space: pre-wrap; font-size: 0.95rem; color:#bbb; border-left: 2px solid var(--accent); padding-left: 15px;"></div>
+            <h1>Regeln</h1>
+            <div id="displayRegeln" style="white-space: pre-wrap; color:#bbb;"></div>
         </div>
         <div class="section">
-            <h1>Support kontaktieren</h1>
-            <textarea id="playerTicketText" placeholder="Was ist dein Anliegen?"></textarea>
-            <button onclick="createTicket()">Ticket absenden</button>
+            <h1>Support-Ticket</h1>
+            <textarea id="playerTicketText" placeholder="Wie können wir helfen?"></textarea>
+            <button onclick="createTicket()">Absenden</button>
         </div>
     </div>
 
@@ -166,23 +167,21 @@
         <div class="section">
             <h1 id="chatHeader">Chat</h1>
             <div id="chatContent" class="chat-box"></div>
-            <input type="text" id="chatInput" placeholder="Nachricht schreiben..." onkeypress="if(event.key==='Enter') sendMsg()">
+            <input type="text" id="chatInput" placeholder="Nachricht...">
             <button onclick="sendMsg()">Senden</button>
-            <button onclick="showPage('pageChats')" style="border:none; color:#666;">Zurück zur Liste</button>
+            <button onclick="showPage('pageChats')" style="border:none;">Zurück</button>
         </div>
     </div>
 
     <script>
-        // DATEN-SPEICHER
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
         let blacklist = JSON.parse(localStorage.getItem('blacklist')) || [];
-        let regeln = localStorage.getItem('projektRegeln') || "Noch keine Regeln festgelegt.";
+        let regeln = localStorage.getItem('projektRegeln') || "Keine Regeln.";
         let currentUser = null;
         let activeChatId = null;
         let manageTarget = null;
 
-        // NAVIGATION
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -190,14 +189,9 @@
         }
 
         function refreshUI() {
-            // Kick-Check
-            if(currentUser && !currentUser.isAdmin) {
-                if(!users.find(u => u.name === currentUser.name)) {
-                    alert("Dein Account wurde vom Admin entfernt.");
-                    location.reload();
-                }
+            if(currentUser && !currentUser.isAdmin && !users.find(u => u.name === currentUser.name)) {
+                alert("Account nicht mehr aktiv."); location.reload();
             }
-            
             document.getElementById('displayRegeln').innerText = regeln;
             if(currentUser?.isAdmin) {
                 document.getElementById('adminRegelnInput').value = regeln;
@@ -208,64 +202,49 @@
             renderChatList();
         }
 
-        // AUTH
         function register() {
             const u = document.getElementById('regUser').value.trim();
             const p = document.getElementById('regPass').value;
-            
-            if(u.toLowerCase() === "admin" && !p) {
-                const newP = prompt("Neues Admin-Passwort festlegen:");
-                if(newP) localStorage.setItem('adminPass', newP);
-                return;
+            if(u.toLowerCase()==="admin" && !p) {
+                const n = prompt("Admin PW:"); if(n) localStorage.setItem('adminPass', n); return;
             }
-            
-            if(blacklist.find(x => x.name === u)) { alert("Dieser Name ist permanent gebannt!"); return; }
-            if(users.find(x => x.name === u)) { alert("Name bereits vergeben!"); return; }
-            if(!u || !p) { alert("Bitte Felder ausfüllen!"); return; }
-            
+            if(blacklist.find(x => x.name === u)) { alert("Gebannt!"); return; }
+            if(users.find(x => x.name === u)) { alert("Existiert bereits!"); return; }
+            if(!u || !p) return;
             users.push({name: u, pass: p, team: "Kein Team"});
-            saveAll();
-            alert("Erfolgreich registriert!");
-            showPage('pageLogin');
+            saveAll(); showPage('pageLogin');
         }
 
         function login() {
             const u = document.getElementById('loginUser').value.trim();
             const p = document.getElementById('loginPass').value;
-            
-            const banEntry = blacklist.find(x => x.name === u);
-            if(banEntry) { alert("ZUGRIFF VERWEIGERT!\n\nGrund: " + banEntry.reason); return; }
-            
-            const adminPw = localStorage.getItem('adminPass') || "1234";
-            if(u.toLowerCase() === "admin" && p === adminPw) {
-                currentUser = {name: "Admin", isAdmin: true, team: "Projektleitung"};
+            const b = blacklist.find(x => x.name === u);
+            if(b) { alert("GEBANNT! Grund: " + b.reason); return; }
+            const apw = localStorage.getItem('adminPass') || "1234";
+            if(u.toLowerCase()==="admin" && p===apw) {
+                currentUser = {name: "Admin", isAdmin: true, team: "Leitung"};
                 enterSystem("pageAdmin");
             } else {
-                const found = users.find(x => x.name === u && x.pass === p);
-                if(found) {
-                    currentUser = found;
-                    enterSystem("pagePlayer");
-                } else {
-                    alert("Login-Daten inkorrekt!");
-                }
+                const f = users.find(x => x.name === u && x.pass === p);
+                if(f) { currentUser = f; enterSystem("pagePlayer"); }
+                else alert("Fehler!");
             }
         }
 
         function enterSystem(page) {
             showPage(page);
-            const trigger = document.getElementById('userProfile');
-            trigger.innerText = currentUser.name[0].toUpperCase();
-            trigger.style.display = "flex";
+            const t = document.getElementById('userProfile');
+            t.innerText = currentUser.name[0].toUpperCase();
+            t.style.display = "flex";
             document.getElementById('dropName').innerText = currentUser.name;
             document.getElementById('dropTeamDisplay').innerText = "Team: " + (currentUser.team || "Keines");
         }
 
-        // ADMIN FUNKTIONEN
         function renderAdminUsers() {
             document.getElementById('adminUserList').innerHTML = users.map(u => `
                 <div class="user-row">
                     <span class="clickable-name" onclick="openUserManage('${u.name}')">${u.name}</span>
-                    <select onchange="updateTeam('${u.name}', this.value)" style="width:auto; margin:0;">
+                    <select onchange="updateTeam('${u.name}', this.value)" style="width:auto;">
                         <option value="Kein Team" ${u.team==='Kein Team'?'selected':''}>Kein Team</option>
                         <option value="Vulkan" ${u.team==='Vulkan'?'selected':''}>Vulkan</option>
                         <option value="Schloss" ${u.team==='Schloss'?'selected':''}>Schloss</option>
@@ -274,136 +253,46 @@
             `).join("");
         }
 
-        function openUserManage(name) {
-            manageTarget = name;
-            document.getElementById('manageTargetName').innerText = name;
-            showPage('pageUserManage');
-        }
-
-        function kickUser() {
-            if(confirm(manageTarget + " wirklich kicken?")) {
-                users = users.filter(u => u.name !== manageTarget);
-                saveAll();
-                showPage('pageAdmin');
-            }
-        }
-
-        function banUser() {
-            const reason = prompt("Grund für den Ban von " + manageTarget + ":");
-            if(!reason) return alert("Abgebrochen: Ban benötigt einen Grund.");
-            
-            blacklist.push({name: manageTarget, reason: reason});
+        function openUserManage(n) { manageTarget = n; document.getElementById('manageTargetName').innerText = n; showPage('pageUserManage'); }
+        function kickUser() { users = users.filter(u => u.name !== manageTarget); saveAll(); showPage('pageAdmin'); }
+        function banUser() { 
+            const r = prompt("Grund:"); if(!r) return;
+            blacklist.push({name: manageTarget, reason: r});
             users = users.filter(u => u.name !== manageTarget);
-            saveAll();
-            alert(manageTarget + " wurde auf die Blacklist gesetzt.");
-            showPage('pageAdmin');
+            saveAll(); showPage('pageAdmin');
         }
-
         function renderBlacklist() {
-            const container = document.getElementById('blacklistContainer');
-            if(blacklist.length === 0) { container.innerHTML = "<p>Keine gebannten User.</p>"; return; }
-            container.innerHTML = blacklist.map(b => `
-                <div class="ban-item" onclick="unbanUser('${b.name}')">
-                    <strong>${b.name}</strong><br>
-                    <small style="color:var(--danger)">Grund: ${b.reason}</small>
-                </div>
-            `).join("");
+            document.getElementById('blacklistContainer').innerHTML = blacklist.map(b => `<div class="ban-item" onclick="unbanUser('${b.name}')">${b.name} (Grund: ${b.reason})</div>`).join("") || "Leer";
         }
-
-        function unbanUser(name) {
-            if(confirm(name + " wirklich entbannen?")) {
-                blacklist = blacklist.filter(b => b.name !== name);
-                saveAll();
-                refreshUI();
-            }
-        }
-
-        function updateTeam(name, team) {
-            const u = users.find(x => x.name === name);
-            if(u) u.team = team;
-            saveAll();
-        }
-
-        function saveRegeln() {
-            regeln = document.getElementById('adminRegelnInput').value;
-            localStorage.setItem('projektRegeln', regeln);
-            alert("Regeln wurden aktualisiert!");
-        }
-
-        // CHAT & TICKETS
+        function unbanUser(n) { if(confirm("Entbannen?")) { blacklist = blacklist.filter(x => x.name !== n); saveAll(); refreshUI(); } }
+        function updateTeam(n, t) { users.find(x => x.name === n).team = t; saveAll(); enterSystem(currentUser.isAdmin?"pageAdmin":"pagePlayer"); }
+        function saveRegeln() { regeln = document.getElementById('adminRegelnInput').value; localStorage.setItem('projektRegeln', regeln); alert("Saved!"); }
         function createTicket() {
-            const txt = document.getElementById('playerTicketText').value;
-            if(!txt) return;
-            tickets.push({
-                id: Date.now(), 
-                player: currentUser.name, 
-                msgs: [{s: currentUser.name, t: txt}], 
-                claimedBy: ""
-            });
-            saveAll();
-            document.getElementById('playerTicketText').value = "";
-            alert("Support-Anfrage gesendet!");
+            const t = document.getElementById('playerTicketText').value; if(!t) return;
+            tickets.push({id: Date.now(), player: currentUser.name, msgs: [{s: currentUser.name, t: t}], claimedBy: ""});
+            saveAll(); alert("Gesendet!");
         }
-
         function renderAdminOpenTickets() {
-            const div = document.getElementById('adminOpenTickets');
-            const open = tickets.filter(t => !t.claimedBy);
-            div.innerHTML = open.length ? open.map(t => `
-                <div class="section" style="border-color:var(--admin)">
-                    <strong>Von ${t.player}:</strong> ${t.msgs[0].t}
-                    <button onclick="claimTicket(${t.id})">Ticket annehmen</button>
-                </div>
-            `).join("") : "<p style='color:#666'>Keine neuen Anfragen.</p>";
+            document.getElementById('adminOpenTickets').innerHTML = tickets.filter(t => !t.claimedBy).map(t => `<div class="section"><strong>${t.player}:</strong> ${t.msgs[0].t} <button onclick="claimTicket(${t.id})">Annehmen</button></div>`).join("") || "Keine Tickets.";
         }
-
-        function claimTicket(id) {
-            tickets.find(x => x.id === id).claimedBy = "Admin";
-            saveAll();
-            openChat(id);
-        }
-
+        function claimTicket(id) { tickets.find(x => x.id === id).claimedBy = "Admin"; saveAll(); openChat(id); }
         function renderChatList() {
-            const div = document.getElementById('chatList');
-            const my = currentUser?.isAdmin ? 
-                       tickets.filter(t => t.claimedBy) : 
-                       tickets.filter(t => t.player === currentUser?.name);
-            
-            div.innerHTML = my.length ? my.map(t => `
-                <div class="section" onclick="openChat(${t.id})" style="cursor:pointer; border-left: 3px solid var(--accent);">
-                    Chat mit ${currentUser.isAdmin ? t.player : 'Support'} (Ticket #${t.id})
-                </div>
-            `).join("") : "<p>Keine aktiven Chats.</p>";
+            const my = currentUser?.isAdmin ? tickets.filter(t => t.claimedBy) : tickets.filter(t => t.player === currentUser?.name);
+            document.getElementById('chatList').innerHTML = my.map(t => `<div class="section" onclick="openChat(${t.id})" style="cursor:pointer">Chat mit ${t.player}</div>`).join("") || "Keine Chats.";
         }
-
         function openChat(id) {
-            activeChatId = id;
-            showPage('pageSingleChat');
+            activeChatId = id; showPage('pageSingleChat');
             const t = tickets.find(x => x.id === id);
-            document.getElementById('chatHeader').innerText = "Chat mit " + (currentUser.isAdmin ? t.player : "Support");
-            document.getElementById('chatContent').innerHTML = t.msgs.map(m => `
-                <div class="msg ${m.s === 'Admin' ? 'msg-admin' : ''}">
-                    <strong>${m.s}:</strong><br>${m.t}
-                </div>
-            `).join("");
-            const box = document.getElementById('chatContent');
-            box.scrollTop = box.scrollHeight;
+            document.getElementById('chatHeader').innerText = "Chat mit " + t.player;
+            document.getElementById('chatContent').innerHTML = t.msgs.map(m => `<div class="msg ${m.s === 'Admin' ? 'msg-admin' : ''}"><strong>${m.s}:</strong> ${m.t}</div>`).join("");
         }
-
         function sendMsg() {
-            const input = document.getElementById('chatInput');
-            if(!input.value) return;
+            const i = document.getElementById('chatInput'); if(!i.value) return;
             const t = tickets.find(x => x.id === activeChatId);
-            t.msgs.push({s: currentUser.name, t: input.value});
-            saveAll();
-            input.value = "";
-            openChat(activeChatId);
+            t.msgs.push({s: currentUser.name, t: i.value});
+            saveAll(); i.value = ""; openChat(activeChatId);
         }
-
-        // HELPERS
-        function toggleDrop() { 
-            const d = document.getElementById('profileDropdown'); 
-            d.style.display = d.style.display === 'block' ? 'none' : 'block'; 
-        }
+        function toggleDrop() { const d = document.getElementById('profileDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
         function saveAll() {
             localStorage.setItem('users', JSON.stringify(users));
             localStorage.setItem('tickets', JSON.stringify(tickets));
