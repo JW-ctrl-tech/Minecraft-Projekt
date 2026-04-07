@@ -14,59 +14,25 @@
             --danger: #e74c3c;
             --text: #e0e0e0;
         }
-        body { 
-            background: var(--bg); color: var(--text); 
-            font-family: 'Consolas', monospace; margin: 0; padding: 20px;
-            line-height: 1.5;
-        }
-        
-        .top-bar { 
-            display: flex; justify-content: flex-end; padding: 10px; 
-            position: sticky; top: 0; background: rgba(0,0,0,0.9); z-index: 100; 
-        }
-        .profile-trigger { 
-            width: 45px; height: 45px; background: #2980b9; color: white; 
-            border-radius: 50%; display: none; align-items: center; 
-            justify-content: center; cursor: pointer; border: 2px solid #fff;
-            font-size: 1.2rem; font-weight: bold;
-        }
-        .dropdown { 
-            position: absolute; top: 65px; right: 10px; background: #111; 
-            border: 1px solid #333; padding: 15px; width: 220px; display: none; 
-            z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .page { display: none; max-width: 800px; margin: auto; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body { background: var(--bg); color: var(--text); font-family: 'Consolas', monospace; margin: 0; padding: 20px; line-height: 1.5; }
+        .top-bar { display: flex; justify-content: flex-end; padding: 10px; position: sticky; top: 0; background: rgba(0,0,0,0.9); z-index: 100; }
+        .profile-trigger { width: 45px; height: 45px; background: #2980b9; color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #fff; font-size: 1.2rem; font-weight: bold; }
+        .dropdown { position: absolute; top: 65px; right: 10px; background: #111; border: 1px solid #333; padding: 15px; width: 220px; display: none; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .page { display: none; max-width: 800px; margin: auto; }
         .active { display: block; }
         .section { background: var(--box); border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; }
-        
         h1, h2 { color: var(--accent); font-size: 1.1rem; text-transform: uppercase; border-bottom: 1px solid #222; padding-bottom: 5px; margin-top: 0; }
-        
-        input, textarea, select { 
-            width: 100%; background: #000; border: 1px solid #333; 
-            color: var(--accent); padding: 12px; margin: 10px 0; box-sizing: border-box; outline: none;
-        }
-        button { 
-            background: transparent; border: 1px solid var(--accent); color: var(--accent); 
-            padding: 10px; cursor: pointer; width: 100%; text-transform: uppercase; 
-            font-weight: bold; transition: 0.3s; margin-top: 5px;
-        }
+        input, textarea, select { width: 100%; background: #000; border: 1px solid #333; color: var(--accent); padding: 12px; margin: 10px 0; box-sizing: border-box; outline: none; }
+        button { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 10px; cursor: pointer; width: 100%; text-transform: uppercase; font-weight: bold; transition: 0.3s; margin-top: 5px; }
         button:hover { background: var(--accent); color: #000; }
-        
         .btn-danger { border-color: var(--danger); color: var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: #fff; }
         .btn-admin { border-color: var(--admin); color: var(--admin); }
-
         .chat-box { height: 250px; overflow-y: auto; background: #050505; padding: 15px; border: 1px solid #222; margin-bottom: 10px; }
         .msg { margin-bottom: 10px; padding: 8px; font-size: 0.9rem; border-left: 3px solid #444; background: #080808; }
         .msg-admin { border-color: var(--admin); background: #120a1a; }
-        
         .user-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #111; }
         .clickable-name { cursor: pointer; text-decoration: underline; color: #3498db; font-weight: bold; }
-        
         .ban-item { padding: 15px; border: 1px solid #333; margin-bottom: 10px; cursor: pointer; }
-        .ban-item:hover { border-color: var(--danger); background: #1a0505; }
     </style>
 </head>
 <body onclick="document.getElementById('profileDropdown').style.display='none'">
@@ -77,7 +43,7 @@
             <strong id="dropName">User</strong>
             <p id="dropTeamDisplay" style="font-size:0.75rem; color:#888; margin: 5px 0 15px 0;">Team: -</p>
             <button onclick="showPage('pageChats')">Meine Chats</button>
-            <button onclick="location.reload()" style="margin-top:10px; border-color:var(--danger); color:var(--danger)">Logout</button>
+            <button onclick="logout()" style="margin-top:10px; border-color:var(--danger); color:var(--danger)">Logout</button>
         </div>
     </div>
 
@@ -114,7 +80,6 @@
     <div id="pageAdminTools" class="page">
         <div class="section">
             <h1>Blacklist Verwaltung</h1>
-            <p style="font-size:0.8rem; color:#888;">Klicke zum Entbannen:</p>
             <div id="blacklistContainer"></div>
             <button onclick="showPage('pageAdmin')" style="margin-top:20px;">Zurück</button>
         </div>
@@ -144,6 +109,7 @@
     </div>
 
     <script>
+        // DATEN AUS STORAGE LADEN
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
         let blacklist = JSON.parse(localStorage.getItem('blacklist')) || [];
@@ -152,19 +118,41 @@
         let activeChatId = null;
         let manageTarget = null;
 
+        // AUTOMATISCHER LOGIN BEIM NEULADEN (FIX FÜR PUNKT 2)
+        window.onload = function() {
+            const savedUser = localStorage.getItem('sessionUser');
+            if (savedUser) {
+                const userData = JSON.parse(savedUser);
+                if (userData.isAdmin) {
+                    currentUser = userData;
+                    enterSystem("pageAdmin");
+                } else {
+                    // Prüfen ob User noch existiert
+                    const exists = users.find(u => u.name === userData.name);
+                    if (exists) {
+                        currentUser = exists;
+                        enterSystem("pagePlayer");
+                    } else {
+                        localStorage.removeItem('sessionUser');
+                    }
+                }
+            }
+        };
+
+        function saveAll() {
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('tickets', JSON.stringify(tickets));
+            localStorage.setItem('blacklist', JSON.stringify(blacklist));
+        }
+
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            
-            // Wichtig: Beim Seitenwechsel Daten laden
             if(id === 'pageAdminTools') renderBlacklist();
             refreshUI();
         }
 
         function refreshUI() {
-            if(currentUser && !currentUser.isAdmin && !users.find(u => u.name === currentUser.name)) {
-                alert("Account entfernt."); location.reload();
-            }
             document.getElementById('displayRegeln').innerText = regeln;
             if(currentUser?.isAdmin) {
                 document.getElementById('adminRegelnInput').value = regeln;
@@ -177,40 +165,58 @@
         function register() {
             const u = document.getElementById('regUser').value.trim();
             const p = document.getElementById('regPass').value;
-            if(u.toLowerCase()==="admin" && !p) {
-                const n = prompt("Admin PW:"); if(n) localStorage.setItem('adminPass', n); return;
-            }
-            if(blacklist.find(x => x.name === u)) { alert("Du bist gebannt!"); return; }
-            if(users.find(x => x.name === u)) { alert("Existiert bereits!"); return; }
-            if(!u || !p) return;
+            if(!u || !p) return alert("Bitte alles ausfüllen!");
+            if(blacklist.find(x => x.name === u)) return alert("Dieser Name ist gebannt!");
+            if(users.find(x => x.name === u)) return alert("Name bereits vergeben!");
+            
             users.push({name: u, pass: p, team: "Kein Team"});
-            saveAll(); showPage('pageLogin');
+            saveAll();
+            alert("Erfolgreich registriert! Bitte logge dich jetzt ein.");
+            showPage('pageLogin');
         }
 
         function login() {
             const u = document.getElementById('loginUser').value.trim();
             const p = document.getElementById('loginPass').value;
-            const b = blacklist.find(x => x.name === u);
-            if(b) { alert("GEBANNT! Grund: " + b.reason); return; }
-            const apw = localStorage.getItem('adminPass') || "1234";
-            if(u.toLowerCase()==="admin" && p===apw) {
+            
+            // Admin Special Login
+            const adminPw = localStorage.getItem('adminPass') || "1234";
+            if(u.toLowerCase()==="admin" && p===adminPw) {
                 currentUser = {name: "Admin", isAdmin: true, team: "Leitung"};
+                localStorage.setItem('sessionUser', JSON.stringify(currentUser));
                 enterSystem("pageAdmin");
-            } else {
-                const f = users.find(x => x.name === u && x.pass === p);
-                if(f) { currentUser = f; enterSystem("pagePlayer"); }
-                else alert("Fehler!");
+                return;
             }
+
+            // Normal User Login
+            const b = blacklist.find(x => x.name === u);
+            if(b) return alert("GEBANNT! Grund: " + b.reason);
+            
+            const f = users.find(x => x.name === u && x.pass === p);
+            if(f) {
+                currentUser = f;
+                localStorage.setItem('sessionUser', JSON.stringify(currentUser));
+                enterSystem("pagePlayer");
+            } else {
+                alert("Benutzername oder Passwort falsch!");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('sessionUser');
+            location.reload();
         }
 
         function enterSystem(page) {
             showPage(page);
             const t = document.getElementById('userProfile');
-            t.innerText = currentUser.name[0].toUpperCase(); t.style.display = "flex";
+            t.innerText = currentUser.name[0].toUpperCase();
+            t.style.display = "flex";
             document.getElementById('dropName').innerText = currentUser.name;
             document.getElementById('dropTeamDisplay').innerText = "Team: " + (currentUser.team || "Keines");
         }
 
+        // --- ADMIN FUNKTIONEN ---
         function renderAdminUsers() {
             document.getElementById('adminUserList').innerHTML = users.map(u => `
                 <div class="user-row">
@@ -224,18 +230,65 @@
             `).join("");
         }
 
-        function openUserManage(n) { manageTarget = n; document.getElementById('manageTargetName').innerText = n; showPage('pageUserManage'); }
-        
-        function kickUser() { 
-            users = users.filter(u => u.name !== manageTarget); 
-            saveAll(); showPage('pageAdmin'); 
+        function updateTeam(name, team) {
+            let u = users.find(x => x.name === name);
+            if(u) u.team = team;
+            saveAll();
         }
-        
+
+        function openUserManage(n) { manageTarget = n; document.getElementById('manageTargetName').innerText = n; showPage('pageUserManage'); }
+        function kickUser() { users = users.filter(u => u.name !== manageTarget); saveAll(); showPage('pageAdmin'); }
         function banUser() { 
-            const r = prompt("Ban-Grund für " + manageTarget + ":"); 
-            if(!r) return;
+            const r = prompt("Grund für Ban von " + manageTarget + ":"); if(!r) return;
             blacklist.push({name: manageTarget, reason: r});
             users = users.filter(u => u.name !== manageTarget);
-            saveAll(); 
-            renderBlacklist(); // Sofort aktualisieren
-            show
+            saveAll(); showPage('pageAdmin');
+        }
+
+        function renderBlacklist() {
+            const container = document.getElementById('blacklistContainer');
+            if(blacklist.length === 0) { container.innerHTML = "Keine gebannten Spieler."; return; }
+            container.innerHTML = blacklist.map(b => `<div class="ban-item" onclick="unbanUser('${b.name}')">${b.name} (Grund: ${b.reason})</div>`).join("");
+        }
+
+        function unbanUser(n) { if(confirm(n + " entbannen?")) { blacklist = blacklist.filter(x => x.name !== n); saveAll(); renderBlacklist(); } }
+        function saveRegeln() { regeln = document.getElementById('adminRegelnInput').value; localStorage.setItem('projektRegeln', regeln); alert("Regeln gespeichert!"); refreshUI(); }
+        
+        // --- CHAT & TICKETS ---
+        function createTicket() {
+            const t = document.getElementById('playerTicketText').value; if(!t) return;
+            tickets.push({id: Date.now(), player: currentUser.name, msgs: [{s: currentUser.name, t: t}], claimedBy: ""});
+            saveAll(); alert("Support-Ticket gesendet!"); document.getElementById('playerTicketText').value = "";
+        }
+
+        function renderAdminOpenTickets() {
+            const open = tickets.filter(t => !t.claimedBy);
+            document.getElementById('adminOpenTickets').innerHTML = open.map(t => `<div class="section">${t.player}: ${t.msgs[0].t} <button onclick="claimTicket(${t.id})">Annehmen</button></div>`).join("") || "Keine neuen Anfragen.";
+        }
+
+        function claimTicket(id) { tickets.find(x => x.id === id).claimedBy = "Admin"; saveAll(); openChat(id); }
+
+        function renderChatList() {
+            const my = currentUser?.isAdmin ? tickets.filter(t => t.claimedBy) : tickets.filter(t => t.player === currentUser?.name);
+            document.getElementById('chatList').innerHTML = my.map(t => `<div class="section" onclick="openChat(${t.id})" style="cursor:pointer">Chat mit ${t.player}</div>`).join("") || "Keine aktiven Chats.";
+        }
+
+        function openChat(id) {
+            activeChatId = id; showPage('pageSingleChat');
+            const t = tickets.find(x => x.id === id);
+            document.getElementById('chatHeader').innerText = "Chat mit " + t.player;
+            document.getElementById('chatContent').innerHTML = t.msgs.map(m => `<div class="msg ${m.s === 'Admin' ? 'msg-admin' : ''}"><strong>${m.s}:</strong> ${m.t}</div>`).join("");
+        }
+
+        function sendMsg() {
+            const i = document.getElementById('chatInput'); if(!i.value) return;
+            const t = tickets.find(x => x.id === activeChatId);
+            t.msgs.push({s: currentUser.name, t: i.value});
+            saveAll(); i.value = ""; openChat(activeChatId);
+        }
+
+        function toggleDrop() { const d = document.getElementById('profileDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
+        function goBack() { showPage(currentUser.isAdmin ? 'pageAdmin' : 'pagePlayer'); }
+    </script>
+</body>
+</html>
