@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projektzentrum</title>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --section-bg: #0a0a0a;
+            --border-color: #222;
+            --accent-color: #27ae60;
+            --text-color: #e0e0e0;
+            --admin-color: #8e44ad;
+        }
+
+        body { 
+            background-color: var(--bg-color);
+            background-image: url('hintergrund.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Top Bar mit Profil */
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px;
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .profile-trigger {
+            width: 40px;
+            height: 40px;
+            background-color: #2980b9;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #fff;
+            display: none; /* Erst nach Login zeigen */
+        }
+
+        /* Dropdown Fenster */
+        .profile-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: #111;
+            border: 1px solid #333;
+            padding: 15px;
+            width: 200px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
+
+        /* Sections */
+        .page { display: none; }
+        .active { display: block; }
+
+        .section { 
+            background: var(--section-bg);
+            padding: 25px; 
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        h1, h2, h3 { text-transform: uppercase; letter-spacing: 1px; }
+        h2 { color: var(--accent-color); border-bottom: 1px solid #333; padding-bottom: 10px; }
+
+        input, textarea { 
+            width: 100%; margin: 10px 0; padding: 12px; 
+            background: #050505; border: 1px solid #333; color: white;
+            box-sizing: border-box;
+        }
+
+        button { 
+            background: var(--accent-color); color: white; border: none; 
+            padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-size: 0.75rem;
+        }
+
+        .ticket { background: #050505; border: 1px solid #333; padding: 10px; margin-top: 10px; }
+        .claimed { border-left: 4px solid var(--admin-color); }
+    </style>
+</head>
+<body onclick="closeDropdown(event)">
+
+    <div class="top-bar">
+        <div id="userProfile" class="profile-trigger" onclick="toggleDropdown(event)">?</div>
+        <div id="profileDropdown" class="profile-dropdown">
+            <h4 id="dropName">Name</h4>
+            <p id="dropTeam" style="font-size: 0.8rem; color: #888;">Team: Keines</p>
+            <hr style="border: 0; border-top: 1px solid #333;">
+            <button onclick="alert('Einstellungen folgen...')" style="width:100%; margin-bottom:5px;">Einstellungen</button>
+            <button onclick="location.reload()" style="width:100%; background:#c0392b;">Logout</button>
+        </div>
+    </div>
+
+    <div id="pageLogin" class="page active">
+        <div class="section">
+            <h1>System Login</h1>
+            <input type="text" id="loginUser" placeholder="Benutzername">
+            <input type="password" id="loginPass" placeholder="Passwort">
+            <button onclick="attemptLogin()">Anmelden</button>
+            <p>Noch kein Account? <a href="#" onclick="showPage('pageRegister')" style="color:var(--accent-color)">Hier registrieren</a></p>
+        </div>
+    </div>
+
+    <div id="pageRegister" class="page">
+        <div class="section">
+            <h1>Registrierung</h1>
+            <input type="text" id="regUser" placeholder="Wunsch-Benutzername">
+            <input type="password" id="regPass" placeholder="Passwort">
+            <button onclick="register()">Konto erstellen</button>
+            <button onclick="showPage('pageLogin')" style="background:#444">Zurück</button>
+        </div>
+    </div>
+
+    <div id="pageMain" class="page">
+        <div class="section">
+            <h2>Regeln</h2>
+            <p>1. Kein Griefing. 2. Support-Tickets nur bei Fehlern.</p>
+        </div>
+        <div class="section">
+            <h2>Support Anfrage</h2>
+            <textarea id="supportMsg" placeholder="Nachricht an die Admins..."></textarea>
+            <button onclick="sendTicket()">Absenden</button>
+        </div>
+    </div>
+
+    <div id="pageAdmin" class="page">
+        <div class="section">
+            <h1>Admin Dashboard</h1>
+            <h2>Teams</h2>
+            <p>Vulkan: Spieler 1-4 | Schloss: Spieler 5-8</p>
+            <h2>Gebannte Spieler</h2>
+            <p style="color: #c0392b;">Keine</p>
+        </div>
+        <div class="section">
+            <h2>Support Anfragen</h2>
+            <div id="adminTicketList"></div>
+        </div>
+    </div>
+
+    <script>
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+        let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
+        let currentUser = null;
+
+        // Navigation
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // Registrierung
+        function register() {
+            const u = document.getElementById('regUser').value;
+            const p = document.getElementById('regPass').value;
+            if(!u || !p) return;
+            users.push({name: u, pass: p, team: "Suche läuft..."});
+            localStorage.setItem('users', JSON.stringify(users));
+            alert("Registriert! Bitte einloggen.");
+            showPage('pageLogin');
+        }
+
+        // Login
+        function attemptLogin() {
+            const u = document.getElementById('loginUser').value;
+            const p = document.getElementById('loginPass').value;
+
+            if(u === "Admin" && p === "1234") {
+                currentUser = {name: "Admin", team: "Leitung"};
+                loginSuccess("pageAdmin");
+            } else {
+                const found = users.find(user => user.name === u && user.pass === p);
+                if(found) {
+                    currentUser = found;
+                    loginSuccess("pageMain");
+                } else {
+                    alert("Zugriff verweigert.");
+                }
+            }
+        }
+
+        function loginSuccess(targetPage) {
+            showPage(targetPage);
+            const trigger = document.getElementById('userProfile');
+            trigger.innerText = currentUser.name.charAt(0).toUpperCase();
+            trigger.style.display = "flex";
+            document.getElementById('dropName').innerText = currentUser.name;
+            document.getElementById('dropTeam').innerText = "Team: " + currentUser.team;
+            if(targetPage === "pageAdmin") renderAdminTickets();
+        }
+
+        // Profil Dropdown
+        function toggleDropdown(e) {
+            e.stopPropagation();
+            const d = document.getElementById('profileDropdown');
+            d.style.display = (d.style.display === "block") ? "none" : "block";
+        }
+
+        function closeDropdown(e) {
+            document.getElementById('profileDropdown').style.display = "none";
+        }
+
+        // Support
+        function sendTicket() {
+            const m = document.getElementById('supportMsg').value;
+            if(!m) return;
+            tickets.push({id: Date.now(), from: currentUser.name, text: m, status: "Offen", admin: ""});
+            localStorage.setItem('tickets', JSON.stringify(tickets));
+            alert("Ticket gesendet.");
+            document.getElementById('supportMsg').value = "";
+        }
+
+        // Admin Logik
+        function renderAdminTickets() {
+            const list = document.getElementById('adminTicketList');
+            list.innerHTML = tickets.map(t => `
+                <div class="ticket ${t.admin ? 'claimed' : ''}">
+                    <strong>${t.from}</strong>: ${t.text}<br>
+                    <small>Status: ${t.status} ${t.admin ? '(Bearbeiter: ' + t.admin + ')' : ''}</small><br>
+                    ${!t.admin ? `<button onclick="claim(${t.id})">Claimen</button>` : `<input type="text" placeholder="Antworten..."><button onclick="alert('Antwort gesendet')">Antworten</button>`}
+                </div>
+            `).join("");
+        }
+
+        function claim(id) {
+            const t = tickets.find(ticket => ticket.id === id);
+            t.status = "In Bearbeitung";
+            t.admin = "Admin";
+            localStorage.setItem('tickets', JSON.stringify(tickets));
+            renderAdminTickets();
+        }
+    </script>
+</body>
+</html>
