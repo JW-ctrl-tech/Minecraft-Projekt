@@ -41,8 +41,9 @@
         <div id="userProfile" class="profile-trigger" onclick="event.stopPropagation(); toggleDrop()">?</div>
         <div id="profileDropdown" class="dropdown">
             <strong id="dropName">User</strong>
-            <p id="dropTeamDisplay" style="font-size:0.75rem; color:#888; margin: 5px 0 15px 0;">Team: -</p>
+            <p id="dropTeamDisplay" style="font-size:0.75rem; color:#888; margin: 5px 0 10px 0;">Team: -</p>
             <button onclick="showPage('pageChats')">Meine Chats</button>
+            <button id="btnPwChange" onclick="showPage('pageChangePw')" style="margin-top:10px;">Passwort ändern</button>
             <button onclick="logout()" style="margin-top:10px; border-color:var(--danger); color:var(--danger)">Logout</button>
         </div>
     </div>
@@ -62,8 +63,20 @@
             <h1>Registrierung</h1>
             <input type="text" id="regUser" placeholder="Wunschname">
             <input type="password" id="regPass" placeholder="Passwort">
+            <input type="password" id="regPassConfirm" placeholder="Passwort bestätigen">
             <button onclick="register()">Konto erstellen</button>
             <button onclick="showPage('pageLogin')" style="border:none; color:#666;">Abbrechen</button>
+        </div>
+    </div>
+
+    <div id="pageChangePw" class="page">
+        <div class="section">
+            <h1>Passwort ändern</h1>
+            <p style="font-size: 0.8rem; color: #888;">Wähle ein neues sicheres Passwort.</p>
+            <input type="password" id="newPw" placeholder="Neues Passwort">
+            <input type="password" id="newPwConfirm" placeholder="Neues Passwort bestätigen">
+            <button onclick="changePassword()">Passwort speichern</button>
+            <button onclick="goBack()" style="border:none; color:#666;">Zurück</button>
         </div>
     </div>
 
@@ -155,6 +168,9 @@
                 document.getElementById('adminRegelnInput').value = regeln;
                 renderAdminUsers();
                 renderAdminOpenTickets();
+                document.getElementById('btnPwChange').style.display = 'none'; // Admin ändert PW nicht hier
+            } else {
+                if(document.getElementById('btnPwChange')) document.getElementById('btnPwChange').style.display = 'block';
             }
             renderChatList();
         }
@@ -162,25 +178,25 @@
         function register() {
             const u = document.getElementById('regUser').value.trim();
             const p = document.getElementById('regPass').value;
-            if(!u || !p) return alert("Bitte alles ausfüllen!");
+            const p2 = document.getElementById('regPassConfirm').value;
+            
+            if(!u || !p) return alert("Bitte alle Felder ausfüllen!");
+            if(p !== p2) return alert("Die Passwörter stimmen nicht überein!");
             if(blacklist.find(x => x.name === u)) return alert("Dieser Name ist gebannt!");
             if(users.find(x => x.name === u)) return alert("Name bereits vergeben!");
             
             users.push({name: u, pass: p, team: "Kein Team"});
             saveAll();
-            alert("Erfolgreich registriert! Bitte logge dich jetzt ein.");
+            alert("Erfolgreich registriert!");
             showPage('pageLogin');
         }
 
         function login() {
             const u = document.getElementById('loginUser').value.trim();
             const p = document.getElementById('loginPass').value;
-
-            // 1. Prüfen ob gebannt
             const banEntry = blacklist.find(x => x.name === u);
             if(banEntry) return alert("GEBANNT! Grund: " + banEntry.reason);
 
-            // 2. Spezialfall Admin
             const adminPw = localStorage.getItem('adminPass') || "1234";
             if(u.toLowerCase() === "admin") {
                 if(p === adminPw) {
@@ -188,26 +204,30 @@
                     localStorage.setItem('sessionUser', JSON.stringify(currentUser));
                     enterSystem("pageAdmin");
                     return;
-                } else {
-                    return alert("Passwort ist falsch.");
-                }
+                } else { return alert("Passwort ist falsch."); }
             }
 
-            // 3. Normaler User Check
             const foundUser = users.find(x => x.name === u);
-            
-            if (!foundUser) {
-                // Präzise Nachricht: Account existiert nicht
-                return alert("Dieser Account existiert nicht.");
-            }
-
+            if (!foundUser) return alert("Dieser Account existiert nicht.");
             if (foundUser.pass === p) {
                 currentUser = foundUser;
                 localStorage.setItem('sessionUser', JSON.stringify(currentUser));
                 enterSystem("pagePlayer");
-            } else {
-                // Präzise Nachricht: Passwort falsch
-                alert("Passwort ist falsch.");
+            } else { alert("Passwort ist falsch."); }
+        }
+
+        function changePassword() {
+            const p1 = document.getElementById('newPw').value;
+            const p2 = document.getElementById('newPwConfirm').value;
+            if(!p1) return alert("Bitte ein Passwort eingeben!");
+            if(p1 !== p2) return alert("Die Passwörter stimmen nicht überein!");
+
+            const userIdx = users.findIndex(u => u.name === currentUser.name);
+            if(userIdx !== -1) {
+                users[userIdx].pass = p1;
+                saveAll();
+                alert("Passwort erfolgreich geändert!");
+                goBack();
             }
         }
 
@@ -255,12 +275,12 @@
 
         function renderBlacklist() {
             const container = document.getElementById('blacklistContainer');
-            if(blacklist.length === 0) { container.innerHTML = "Keine gebannten Spieler."; return; }
+            if(blacklist.length === 0) { container.innerHTML = "Keine Einträge."; return; }
             container.innerHTML = blacklist.map(b => `<div class="ban-item" onclick="unbanUser('${b.name}')">${b.name} (Grund: ${b.reason})</div>`).join("");
         }
 
         function unbanUser(n) { if(confirm(n + " entbannen?")) { blacklist = blacklist.filter(x => x.name !== n); saveAll(); renderBlacklist(); } }
-        function saveRegeln() { regeln = document.getElementById('adminRegelnInput').value; localStorage.setItem('projektRegeln', regeln); alert("Regeln gespeichert!"); refreshUI(); }
+        function saveRegeln() { regeln = document.getElementById('adminRegelnInput').value; localStorage.setItem('projektRegeln', regeln); alert("Gespeichert!"); refreshUI(); }
         
         function createTicket() {
             const t = document.getElementById('playerTicketText').value; if(!t) return;
