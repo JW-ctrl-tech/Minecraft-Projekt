@@ -20,7 +20,6 @@
             line-height: 1.5;
         }
         
-        /* TOP BAR & PROFILE ICON */
         .top-bar { 
             display: flex; justify-content: flex-end; padding: 10px; 
             position: sticky; top: 0; background: rgba(0,0,0,0.9); z-index: 100; 
@@ -29,7 +28,7 @@
             width: 45px; height: 45px; background: #2980b9; color: white; 
             border-radius: 50%; display: none; align-items: center; 
             justify-content: center; cursor: pointer; border: 2px solid #fff;
-            font-size: 1.2rem; font-weight: bold; box-shadow: 0 0 10px rgba(255,255,255,0.2);
+            font-size: 1.2rem; font-weight: bold;
         }
         .dropdown { 
             position: absolute; top: 65px; right: 10px; background: #111; 
@@ -75,9 +74,8 @@
     <div class="top-bar">
         <div id="userProfile" class="profile-trigger" onclick="event.stopPropagation(); toggleDrop()">?</div>
         <div id="profileDropdown" class="dropdown">
-            <strong id="dropName" style="display:block; font-size:1.1rem;">User</strong>
+            <strong id="dropName">User</strong>
             <p id="dropTeamDisplay" style="font-size:0.75rem; color:#888; margin: 5px 0 15px 0;">Team: -</p>
-            <hr style="border:0; border-top:1px solid #222; margin-bottom:15px;">
             <button onclick="showPage('pageChats')">Meine Chats</button>
             <button onclick="location.reload()" style="margin-top:10px; border-color:var(--danger); color:var(--danger)">Logout</button>
         </div>
@@ -89,9 +87,7 @@
             <input type="text" id="loginUser" placeholder="Benutzername">
             <input type="password" id="loginPass" placeholder="Passwort">
             <button onclick="login()">Anmelden</button>
-            <p style="font-size:0.8rem; text-align:center; margin-top:20px;">
-                Kein Account? <a href="#" onclick="showPage('pageRegister')" style="color:var(--accent)">Hier registrieren</a>
-            </p>
+            <p style="font-size:0.8rem; text-align:center; margin-top:20px;">Kein Account? <a href="#" onclick="showPage('pageRegister')" style="color:var(--accent)">Registrieren</a></p>
         </div>
     </div>
 
@@ -101,7 +97,7 @@
             <input type="text" id="regUser" placeholder="Wunschname">
             <input type="password" id="regPass" placeholder="Passwort">
             <button onclick="register()">Konto erstellen</button>
-            <button onclick="showPage('pageLogin')" style="border:none; color:#666;">Zurück zum Login</button>
+            <button onclick="showPage('pageLogin')" style="border:none; color:#666;">Abbrechen</button>
         </div>
     </div>
 
@@ -110,24 +106,15 @@
             <h1>Admin Zentrale</h1>
             <button class="btn-admin" onclick="showPage('pageAdminTools')">Admin Tools (Blacklist)</button>
         </div>
-        <div class="section">
-            <h2>Projekt-Regeln</h2>
-            <textarea id="adminRegelnInput" rows="4"></textarea>
-            <button onclick="saveRegeln()">Speichern</button>
-        </div>
-        <div class="section">
-            <h2>Support Tickets</h2>
-            <div id="adminOpenTickets"></div>
-        </div>
-        <div class="section">
-            <h2>User-Liste (Klick für Kick/Ban)</h2>
-            <div id="adminUserList"></div>
-        </div>
+        <div class="section"><h2>Regeln</h2><textarea id="adminRegelnInput" rows="3"></textarea><button onclick="saveRegeln()">Speichern</button></div>
+        <div class="section"><h2>Support Tickets</h2><div id="adminOpenTickets"></div></div>
+        <div class="section"><h2>User-Liste</h2><div id="adminUserList"></div></div>
     </div>
 
     <div id="pageAdminTools" class="page">
         <div class="section">
-            <h1>Blacklist</h1>
+            <h1>Blacklist Verwaltung</h1>
+            <p style="font-size:0.8rem; color:#888;">Klicke zum Entbannen:</p>
             <div id="blacklistContainer"></div>
             <button onclick="showPage('pageAdmin')" style="margin-top:20px;">Zurück</button>
         </div>
@@ -135,42 +122,25 @@
 
     <div id="pageUserManage" class="page">
         <div class="section">
-            <h1>User Management</h1>
-            <p>User: <strong id="manageTargetName" style="color:var(--accent)">-</strong></p>
+            <h1>User bearbeiten</h1>
+            <p>Name: <strong id="manageTargetName" style="color:var(--accent)">-</strong></p>
             <button class="btn-danger" onclick="kickUser()">Kicken</button>
             <button class="btn-danger" style="background: #330000; margin-top:10px;" onclick="banUser()">Bannen</button>
-            <button onclick="showPage('pageAdmin')" style="border:none; margin-top:20px;">Abbrechen</button>
+            <button onclick="showPage('pageAdmin')" style="border:none; margin-top:20px;">Zurück</button>
         </div>
     </div>
 
     <div id="pagePlayer" class="page">
-        <div class="section">
-            <h1>Regeln</h1>
-            <div id="displayRegeln" style="white-space: pre-wrap; color:#bbb;"></div>
-        </div>
-        <div class="section">
-            <h1>Support-Ticket</h1>
-            <textarea id="playerTicketText" placeholder="Wie können wir helfen?"></textarea>
-            <button onclick="createTicket()">Absenden</button>
-        </div>
+        <div class="section"><h1>Regeln</h1><div id="displayRegeln" style="white-space: pre-wrap; color:#bbb;"></div></div>
+        <div class="section"><h1>Support</h1><textarea id="playerTicketText"></textarea><button onclick="createTicket()">Absenden</button></div>
     </div>
 
     <div id="pageChats" class="page">
-        <div class="section">
-            <h1>Deine Chats</h1>
-            <div id="chatList"></div>
-            <button onclick="goBack()" style="margin-top:20px;">Zurück</button>
-        </div>
+        <div class="section"><h1>Deine Chats</h1><div id="chatList"></div><button onclick="goBack()" style="margin-top:20px;">Zurück</button></div>
     </div>
 
     <div id="pageSingleChat" class="page">
-        <div class="section">
-            <h1 id="chatHeader">Chat</h1>
-            <div id="chatContent" class="chat-box"></div>
-            <input type="text" id="chatInput" placeholder="Nachricht...">
-            <button onclick="sendMsg()">Senden</button>
-            <button onclick="showPage('pageChats')" style="border:none;">Zurück</button>
-        </div>
+        <div class="section"><h1 id="chatHeader">Chat</h1><div id="chatContent" class="chat-box"></div><input type="text" id="chatInput"><button onclick="sendMsg()">Senden</button><button onclick="showPage('pageChats')" style="border:none;">Zurück</button></div>
     </div>
 
     <script>
@@ -185,19 +155,21 @@
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            
+            // Wichtig: Beim Seitenwechsel Daten laden
+            if(id === 'pageAdminTools') renderBlacklist();
             refreshUI();
         }
 
         function refreshUI() {
             if(currentUser && !currentUser.isAdmin && !users.find(u => u.name === currentUser.name)) {
-                alert("Account nicht mehr aktiv."); location.reload();
+                alert("Account entfernt."); location.reload();
             }
             document.getElementById('displayRegeln').innerText = regeln;
             if(currentUser?.isAdmin) {
                 document.getElementById('adminRegelnInput').value = regeln;
                 renderAdminUsers();
                 renderAdminOpenTickets();
-                renderBlacklist();
             }
             renderChatList();
         }
@@ -208,7 +180,7 @@
             if(u.toLowerCase()==="admin" && !p) {
                 const n = prompt("Admin PW:"); if(n) localStorage.setItem('adminPass', n); return;
             }
-            if(blacklist.find(x => x.name === u)) { alert("Gebannt!"); return; }
+            if(blacklist.find(x => x.name === u)) { alert("Du bist gebannt!"); return; }
             if(users.find(x => x.name === u)) { alert("Existiert bereits!"); return; }
             if(!u || !p) return;
             users.push({name: u, pass: p, team: "Kein Team"});
@@ -234,8 +206,7 @@
         function enterSystem(page) {
             showPage(page);
             const t = document.getElementById('userProfile');
-            t.innerText = currentUser.name[0].toUpperCase();
-            t.style.display = "flex";
+            t.innerText = currentUser.name[0].toUpperCase(); t.style.display = "flex";
             document.getElementById('dropName').innerText = currentUser.name;
             document.getElementById('dropTeamDisplay').innerText = "Team: " + (currentUser.team || "Keines");
         }
@@ -254,51 +225,17 @@
         }
 
         function openUserManage(n) { manageTarget = n; document.getElementById('manageTargetName').innerText = n; showPage('pageUserManage'); }
-        function kickUser() { users = users.filter(u => u.name !== manageTarget); saveAll(); showPage('pageAdmin'); }
+        
+        function kickUser() { 
+            users = users.filter(u => u.name !== manageTarget); 
+            saveAll(); showPage('pageAdmin'); 
+        }
+        
         function banUser() { 
-            const r = prompt("Grund:"); if(!r) return;
+            const r = prompt("Ban-Grund für " + manageTarget + ":"); 
+            if(!r) return;
             blacklist.push({name: manageTarget, reason: r});
             users = users.filter(u => u.name !== manageTarget);
-            saveAll(); showPage('pageAdmin');
-        }
-        function renderBlacklist() {
-            document.getElementById('blacklistContainer').innerHTML = blacklist.map(b => `<div class="ban-item" onclick="unbanUser('${b.name}')">${b.name} (Grund: ${b.reason})</div>`).join("") || "Leer";
-        }
-        function unbanUser(n) { if(confirm("Entbannen?")) { blacklist = blacklist.filter(x => x.name !== n); saveAll(); refreshUI(); } }
-        function updateTeam(n, t) { users.find(x => x.name === n).team = t; saveAll(); enterSystem(currentUser.isAdmin?"pageAdmin":"pagePlayer"); }
-        function saveRegeln() { regeln = document.getElementById('adminRegelnInput').value; localStorage.setItem('projektRegeln', regeln); alert("Saved!"); }
-        function createTicket() {
-            const t = document.getElementById('playerTicketText').value; if(!t) return;
-            tickets.push({id: Date.now(), player: currentUser.name, msgs: [{s: currentUser.name, t: t}], claimedBy: ""});
-            saveAll(); alert("Gesendet!");
-        }
-        function renderAdminOpenTickets() {
-            document.getElementById('adminOpenTickets').innerHTML = tickets.filter(t => !t.claimedBy).map(t => `<div class="section"><strong>${t.player}:</strong> ${t.msgs[0].t} <button onclick="claimTicket(${t.id})">Annehmen</button></div>`).join("") || "Keine Tickets.";
-        }
-        function claimTicket(id) { tickets.find(x => x.id === id).claimedBy = "Admin"; saveAll(); openChat(id); }
-        function renderChatList() {
-            const my = currentUser?.isAdmin ? tickets.filter(t => t.claimedBy) : tickets.filter(t => t.player === currentUser?.name);
-            document.getElementById('chatList').innerHTML = my.map(t => `<div class="section" onclick="openChat(${t.id})" style="cursor:pointer">Chat mit ${t.player}</div>`).join("") || "Keine Chats.";
-        }
-        function openChat(id) {
-            activeChatId = id; showPage('pageSingleChat');
-            const t = tickets.find(x => x.id === id);
-            document.getElementById('chatHeader').innerText = "Chat mit " + t.player;
-            document.getElementById('chatContent').innerHTML = t.msgs.map(m => `<div class="msg ${m.s === 'Admin' ? 'msg-admin' : ''}"><strong>${m.s}:</strong> ${m.t}</div>`).join("");
-        }
-        function sendMsg() {
-            const i = document.getElementById('chatInput'); if(!i.value) return;
-            const t = tickets.find(x => x.id === activeChatId);
-            t.msgs.push({s: currentUser.name, t: i.value});
-            saveAll(); i.value = ""; openChat(activeChatId);
-        }
-        function toggleDrop() { const d = document.getElementById('profileDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
-        function saveAll() {
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('tickets', JSON.stringify(tickets));
-            localStorage.setItem('blacklist', JSON.stringify(blacklist));
-        }
-        function goBack() { showPage(currentUser.isAdmin ? 'pageAdmin' : 'pagePlayer'); }
-    </script>
-</body>
-</html>
+            saveAll(); 
+            renderBlacklist(); // Sofort aktualisieren
+            show
