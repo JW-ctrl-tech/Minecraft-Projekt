@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Projektzentrum</title>
+    <title>Minecraft Projektzentrum - Secure Edition</title>
     <style>
         :root {
             --bg: #000000;
@@ -24,7 +24,8 @@
         h1, h2 { color: var(--accent); font-size: 1.1rem; text-transform: uppercase; border-bottom: 1px solid #222; padding-bottom: 5px; margin-top: 0; }
         input, textarea, select { width: 100%; background: #000; border: 1px solid #333; color: var(--accent); padding: 12px; margin: 10px 0; box-sizing: border-box; outline: none; }
         button { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 10px; cursor: pointer; width: 100%; text-transform: uppercase; font-weight: bold; transition: 0.3s; margin-top: 5px; }
-        button:hover { background: var(--accent); color: #000; }
+        button:hover:not(:disabled) { background: var(--accent); color: #000; }
+        button:disabled { border-color: #444; color: #444; cursor: not-allowed; }
         .btn-danger { border-color: var(--danger); color: var(--danger); }
         .btn-admin { border-color: var(--admin); color: var(--admin); }
         .chat-box { height: 250px; overflow-y: auto; background: #050505; padding: 15px; border: 1px solid #222; margin-bottom: 10px; }
@@ -41,7 +42,7 @@
         <div id="userProfile" class="profile-trigger" onclick="event.stopPropagation(); toggleDrop()">?</div>
         <div id="profileDropdown" class="dropdown">
             <strong id="dropName">User</strong>
-            <p id="dropTeamDisplay" style="font-size:0.75rem; color:#888; margin: 5px 0 10px 0;">Team: -</p>
+            <p id="dropTeamDisplay" style="font-size:0.75rem; color:#888; margin: 5px 0 15px 0;">Team: -</p>
             <button onclick="showPage('pageChats')">Meine Chats</button>
             <button id="btnPwChange" onclick="showPage('pageChangePw')" style="margin-top:10px;">Passwort ändern</button>
             <button onclick="logout()" style="margin-top:10px; border-color:var(--danger); color:var(--danger)">Logout</button>
@@ -53,7 +54,8 @@
             <h1>System Login</h1>
             <input type="text" id="loginUser" placeholder="Benutzername">
             <input type="password" id="loginPass" placeholder="Passwort">
-            <button onclick="login()">Anmelden</button>
+            <button id="btnLogin" onclick="login()">Anmelden</button>
+            <p id="loginLockMsg" style="color:var(--danger); font-size:0.8rem; text-align:center; display:none;">Zu viele Versuche! Bitte warten...</p>
             <p style="font-size:0.8rem; text-align:center; margin-top:20px;">Kein Account? <a href="#" onclick="showPage('pageRegister')" style="color:var(--accent)">Registrieren</a></p>
         </div>
     </div>
@@ -61,6 +63,7 @@
     <div id="pageRegister" class="page">
         <div class="section">
             <h1>Registrierung</h1>
+            <p style="font-size:0.7rem; color:#888;">Passwort: Mindestens 6 Zeichen.</p>
             <input type="text" id="regUser" placeholder="Wunschname">
             <input type="password" id="regPass" placeholder="Passwort">
             <input type="password" id="regPassConfirm" placeholder="Passwort bestätigen">
@@ -72,8 +75,7 @@
     <div id="pageChangePw" class="page">
         <div class="section">
             <h1>Passwort ändern</h1>
-            <p style="font-size: 0.8rem; color: #888;">Wähle ein neues sicheres Passwort.</p>
-            <input type="password" id="newPw" placeholder="Neues Passwort">
+            <input type="password" id="newPw" placeholder="Neues Passwort (min. 6 Zeichen)">
             <input type="password" id="newPwConfirm" placeholder="Neues Passwort bestätigen">
             <button onclick="changePassword()">Passwort speichern</button>
             <button onclick="goBack()" style="border:none; color:#666;">Zurück</button>
@@ -110,7 +112,11 @@
 
     <div id="pagePlayer" class="page">
         <div class="section"><h1>Regeln</h1><div id="displayRegeln" style="white-space: pre-wrap; color:#bbb;"></div></div>
-        <div class="section"><h1>Support</h1><textarea id="playerTicketText"></textarea><button onclick="createTicket()">Absenden</button></div>
+        <div class="section"><h1>Support</h1>
+            <p style="font-size:0.7rem; color:#888;">Spam-Schutz: Nur 1 Ticket pro Minute.</p>
+            <textarea id="playerTicketText"></textarea>
+            <button id="btnSendTicket" onclick="createTicket()">Absenden</button>
+        </div>
     </div>
 
     <div id="pageChats" class="page">
@@ -122,6 +128,10 @@
     </div>
 
     <script>
+        // --- ADMIN-KONFIGURATION ---
+        // Hier dein gewünschtes Admin-Passwort zwischen die Anführungszeichen schreiben:
+        const MASTER_ADMIN_PASSWORD = ""; // 🛡️ Schreib dein Passwort hier rein! 😊
+
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
         let blacklist = JSON.parse(localStorage.getItem('blacklist')) || [];
@@ -129,22 +139,20 @@
         let currentUser = null;
         let activeChatId = null;
         let manageTarget = null;
+        
+        // Security Variablen
+        let loginAttempts = 0;
+        let lastTicketTime = 0;
 
         window.onload = function() {
             const savedUser = localStorage.getItem('sessionUser');
             if (savedUser) {
                 const userData = JSON.parse(savedUser);
-                if (userData.isAdmin) {
-                    currentUser = userData;
-                    enterSystem("pageAdmin");
-                } else {
+                if (userData.isAdmin) { currentUser = userData; enterSystem("pageAdmin"); }
+                else {
                     const exists = users.find(u => u.name === userData.name);
-                    if (exists) {
-                        currentUser = exists;
-                        enterSystem("pagePlayer");
-                    } else {
-                        localStorage.removeItem('sessionUser');
-                    }
+                    if (exists) { currentUser = exists; enterSystem("pagePlayer"); }
+                    else { localStorage.removeItem('sessionUser'); }
                 }
             }
         };
@@ -168,7 +176,7 @@
                 document.getElementById('adminRegelnInput').value = regeln;
                 renderAdminUsers();
                 renderAdminOpenTickets();
-                document.getElementById('btnPwChange').style.display = 'none'; // Admin ändert PW nicht hier
+                document.getElementById('btnPwChange').style.display = 'none';
             } else {
                 if(document.getElementById('btnPwChange')) document.getElementById('btnPwChange').style.display = 'block';
             }
@@ -181,6 +189,8 @@
             const p2 = document.getElementById('regPassConfirm').value;
             
             if(!u || !p) return alert("Bitte alle Felder ausfüllen!");
+            if(u.toLowerCase() === "admin") return alert("Dieser Name ist reserviert!");
+            if(p.length < 6) return alert("Passwort zu kurz! (Min. 6 Zeichen)");
             if(p !== p2) return alert("Die Passwörter stimmen nicht überein!");
             if(blacklist.find(x => x.name === u)) return alert("Dieser Name ist gebannt!");
             if(users.find(x => x.name === u)) return alert("Name bereits vergeben!");
@@ -194,32 +204,52 @@
         function login() {
             const u = document.getElementById('loginUser').value.trim();
             const p = document.getElementById('loginPass').value;
+            
             const banEntry = blacklist.find(x => x.name === u);
             if(banEntry) return alert("GEBANNT! Grund: " + banEntry.reason);
 
-            const adminPw = localStorage.getItem('adminPass') || "1234";
+            // Spezialfall Admin (Admin-Lock)
             if(u.toLowerCase() === "admin") {
-                if(p === adminPw) {
-                    currentUser = {name: "Admin", isAdmin: true, team: "Leitung"};
-                    localStorage.setItem('sessionUser', JSON.stringify(currentUser));
-                    enterSystem("pageAdmin");
-                    return;
-                } else { return alert("Passwort ist falsch."); }
+                if(p === MASTER_ADMIN_PASSWORD && MASTER_ADMIN_PASSWORD !== "") { 
+                    loginSuccess({name: "Admin", isAdmin: true, team: "Leitung"}, "pageAdmin"); 
+                }
+                else { loginFail(); }
+                return;
             }
 
             const foundUser = users.find(x => x.name === u);
             if (!foundUser) return alert("Dieser Account existiert nicht.");
-            if (foundUser.pass === p) {
-                currentUser = foundUser;
-                localStorage.setItem('sessionUser', JSON.stringify(currentUser));
-                enterSystem("pagePlayer");
-            } else { alert("Passwort ist falsch."); }
+            if (foundUser.pass === p) { loginSuccess(foundUser, "pagePlayer"); }
+            else { loginFail(); }
+        }
+
+        function loginSuccess(user, page) {
+            currentUser = user;
+            loginAttempts = 0;
+            localStorage.setItem('sessionUser', JSON.stringify(currentUser));
+            enterSystem(page);
+        }
+
+        function loginFail() {
+            loginAttempts++;
+            alert("Passwort ist falsch.");
+            if(loginAttempts >= 5) {
+                const btn = document.getElementById('btnLogin');
+                const msg = document.getElementById('loginLockMsg');
+                btn.disabled = true;
+                msg.style.display = "block";
+                setTimeout(() => { 
+                    btn.disabled = false; 
+                    msg.style.display = "none";
+                    loginAttempts = 0;
+                }, 30000);
+            }
         }
 
         function changePassword() {
             const p1 = document.getElementById('newPw').value;
             const p2 = document.getElementById('newPwConfirm').value;
-            if(!p1) return alert("Bitte ein Passwort eingeben!");
+            if(p1.length < 6) return alert("Passwort muss mindestens 6 Zeichen haben!");
             if(p1 !== p2) return alert("Die Passwörter stimmen nicht überein!");
 
             const userIdx = users.findIndex(u => u.name === currentUser.name);
@@ -231,10 +261,7 @@
             }
         }
 
-        function logout() {
-            localStorage.removeItem('sessionUser');
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('sessionUser'); location.reload(); }
 
         function enterSystem(page) {
             showPage(page);
@@ -283,21 +310,27 @@
         function saveRegeln() { regeln = document.getElementById('adminRegelnInput').value; localStorage.setItem('projektRegeln', regeln); alert("Gespeichert!"); refreshUI(); }
         
         function createTicket() {
+            const now = Date.now();
+            if(now - lastTicketTime < 60000) return alert("Spam-Schutz: Bitte warte eine Minute.");
+            
             const t = document.getElementById('playerTicketText').value; if(!t) return;
-            tickets.push({id: Date.now(), player: currentUser.name, msgs: [{s: currentUser.name, t: t}], claimedBy: ""});
-            saveAll(); alert("Support-Ticket gesendet!"); document.getElementById('playerTicketText').value = "";
+            tickets.push({id: now, player: currentUser.name, msgs: [{s: currentUser.name, t: t}], claimedBy: ""});
+            lastTicketTime = now;
+            saveAll(); 
+            alert("Ticket gesendet!"); 
+            document.getElementById('playerTicketText').value = "";
         }
 
         function renderAdminOpenTickets() {
             const open = tickets.filter(t => !t.claimedBy);
-            document.getElementById('adminOpenTickets').innerHTML = open.map(t => `<div class="section">${t.player}: ${t.msgs[0].t} <button onclick="claimTicket(${t.id})">Annehmen</button></div>`).join("") || "Keine neuen Anfragen.";
+            document.getElementById('adminOpenTickets').innerHTML = open.map(t => `<div class="section">${t.player}: ${t.msgs[0].t} <button onclick="claimTicket(${t.id})">Annehmen</button></div>`).join("") || "Keine Anfragen.";
         }
 
         function claimTicket(id) { tickets.find(x => x.id === id).claimedBy = "Admin"; saveAll(); openChat(id); }
 
         function renderChatList() {
             const my = currentUser?.isAdmin ? tickets.filter(t => t.claimedBy) : tickets.filter(t => t.player === currentUser?.name);
-            document.getElementById('chatList').innerHTML = my.map(t => `<div class="section" onclick="openChat(${t.id})" style="cursor:pointer">Chat mit ${t.player}</div>`).join("") || "Keine aktiven Chats.";
+            document.getElementById('chatList').innerHTML = my.map(t => `<div class="section" onclick="openChat(${t.id})" style="cursor:pointer">Chat mit ${t.player}</div>`).join("") || "Keine Chats.";
         }
 
         function openChat(id) {
