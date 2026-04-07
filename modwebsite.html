@@ -109,7 +109,6 @@
     </div>
 
     <script>
-        // DATEN AUS STORAGE LADEN
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
         let blacklist = JSON.parse(localStorage.getItem('blacklist')) || [];
@@ -118,7 +117,6 @@
         let activeChatId = null;
         let manageTarget = null;
 
-        // AUTOMATISCHER LOGIN BEIM NEULADEN (FIX FÜR PUNKT 2)
         window.onload = function() {
             const savedUser = localStorage.getItem('sessionUser');
             if (savedUser) {
@@ -127,7 +125,6 @@
                     currentUser = userData;
                     enterSystem("pageAdmin");
                 } else {
-                    // Prüfen ob User noch existiert
                     const exists = users.find(u => u.name === userData.name);
                     if (exists) {
                         currentUser = exists;
@@ -178,27 +175,39 @@
         function login() {
             const u = document.getElementById('loginUser').value.trim();
             const p = document.getElementById('loginPass').value;
-            
-            // Admin Special Login
+
+            // 1. Prüfen ob gebannt
+            const banEntry = blacklist.find(x => x.name === u);
+            if(banEntry) return alert("GEBANNT! Grund: " + banEntry.reason);
+
+            // 2. Spezialfall Admin
             const adminPw = localStorage.getItem('adminPass') || "1234";
-            if(u.toLowerCase()==="admin" && p===adminPw) {
-                currentUser = {name: "Admin", isAdmin: true, team: "Leitung"};
-                localStorage.setItem('sessionUser', JSON.stringify(currentUser));
-                enterSystem("pageAdmin");
-                return;
+            if(u.toLowerCase() === "admin") {
+                if(p === adminPw) {
+                    currentUser = {name: "Admin", isAdmin: true, team: "Leitung"};
+                    localStorage.setItem('sessionUser', JSON.stringify(currentUser));
+                    enterSystem("pageAdmin");
+                    return;
+                } else {
+                    return alert("Passwort ist falsch.");
+                }
             }
 
-            // Normal User Login
-            const b = blacklist.find(x => x.name === u);
-            if(b) return alert("GEBANNT! Grund: " + b.reason);
+            // 3. Normaler User Check
+            const foundUser = users.find(x => x.name === u);
             
-            const f = users.find(x => x.name === u && x.pass === p);
-            if(f) {
-                currentUser = f;
+            if (!foundUser) {
+                // Präzise Nachricht: Account existiert nicht
+                return alert("Dieser Account existiert nicht.");
+            }
+
+            if (foundUser.pass === p) {
+                currentUser = foundUser;
                 localStorage.setItem('sessionUser', JSON.stringify(currentUser));
                 enterSystem("pagePlayer");
             } else {
-                alert("Benutzername oder Passwort falsch!");
+                // Präzise Nachricht: Passwort falsch
+                alert("Passwort ist falsch.");
             }
         }
 
@@ -216,7 +225,6 @@
             document.getElementById('dropTeamDisplay').innerText = "Team: " + (currentUser.team || "Keines");
         }
 
-        // --- ADMIN FUNKTIONEN ---
         function renderAdminUsers() {
             document.getElementById('adminUserList').innerHTML = users.map(u => `
                 <div class="user-row">
@@ -254,7 +262,6 @@
         function unbanUser(n) { if(confirm(n + " entbannen?")) { blacklist = blacklist.filter(x => x.name !== n); saveAll(); renderBlacklist(); } }
         function saveRegeln() { regeln = document.getElementById('adminRegelnInput').value; localStorage.setItem('projektRegeln', regeln); alert("Regeln gespeichert!"); refreshUI(); }
         
-        // --- CHAT & TICKETS ---
         function createTicket() {
             const t = document.getElementById('playerTicketText').value; if(!t) return;
             tickets.push({id: Date.now(), player: currentUser.name, msgs: [{s: currentUser.name, t: t}], claimedBy: ""});
