@@ -3,270 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minecraft Projektzentrum</title>
+    <title>Minecraft Projektpanel</title>
     <style>
         :root {
-            --bg-color: #000000;
-            --section-bg: #0d0d0d;
-            --border-color: #1a1a1a;
-            --accent-color: #2ecc71;
-            --admin-color: #9b59b6;
-            --text-main: #e0e0e0;
+            --bg: #000000;
+            --box: #0a0a0a;
+            --border: #1a1a1a;
+            --accent: #2ecc71;
+            --admin: #9b59b6;
+            --text: #e0e0e0;
+            --online: #2ecc71;
+            --offline: #e74c3c;
         }
 
         body { 
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Consolas', monospace;
-            margin: 0; padding: 20px;
+            background: var(--bg); color: var(--text); 
+            font-family: 'Consolas', monospace; margin: 0; padding: 20px;
         }
 
         .top-bar {
-            display: flex; justify-content: flex-end; padding: 15px;
+            display: flex; justify-content: flex-end; padding: 10px;
             position: sticky; top: 0; background: rgba(0,0,0,0.9); z-index: 100;
         }
 
         .profile-trigger {
-            width: 42px; height: 42px; background-color: #2980b9;
-            color: white; border-radius: 50%; display: none;
-            align-items: center; justify-content: center; font-weight: bold;
-            cursor: pointer; border: 1px solid #3498db;
+            width: 40px; height: 40px; background: #2980b9; color: white;
+            border-radius: 50%; display: none; align-items: center; 
+            justify-content: center; cursor: pointer; border: 1px solid #fff;
         }
 
-        .profile-dropdown {
-            position: absolute; top: 65px; right: 15px;
-            background: #111; border: 1px solid #333; padding: 20px;
-            width: 220px; display: none; box-shadow: 0 10px 40px rgba(0,0,0,1);
+        .dropdown {
+            position: absolute; top: 60px; right: 10px; background: #111;
+            border: 1px solid #333; padding: 15px; width: 200px; display: none;
         }
 
-        .page { display: none; }
+        .page { display: none; max-width: 800px; margin: auto; }
         .active { display: block; }
 
         .section { 
-            background: var(--section-bg); padding: 25px; 
-            border: 1px solid var(--border-color); margin: 20px auto; max-width: 700px;
+            background: var(--box); border: 1px solid var(--border);
+            padding: 20px; margin-bottom: 20px;
         }
 
-        input, textarea { 
-            width: 100%; margin: 10px 0; padding: 12px; 
-            background: #050505; border: 1px solid #222; color: #2ecc71;
-            box-sizing: border-box; outline: none;
+        h2 { color: var(--accent); font-size: 1rem; text-transform: uppercase; border-bottom: 1px solid #222; padding-bottom: 5px; }
+
+        input, textarea, select { 
+            width: 100%; background: #000; border: 1px solid #333; 
+            color: var(--accent); padding: 10px; margin: 10px 0; box-sizing: border-box;
         }
 
         button { 
-            background: transparent; color: var(--accent-color); border: 1px solid var(--accent-color);
-            padding: 10px 20px; cursor: pointer; text-transform: uppercase; font-size: 0.8rem;
-            transition: 0.3s; width: 100%; margin-top: 5px;
+            background: transparent; border: 1px solid var(--accent); color: var(--accent);
+            padding: 10px; cursor: pointer; width: 100%; text-transform: uppercase;
         }
 
-        button:hover { background: var(--accent-color); color: black; }
+        button:hover { background: var(--accent); color: #000; }
 
         /* Chat Styles */
-        .chat-container {
-            max-height: 300px; overflow-y: auto; background: #050505;
-            padding: 10px; border: 1px solid #222; margin-bottom: 10px;
-        }
-
-        .msg { margin-bottom: 10px; padding: 8px; border-radius: 4px; font-size: 0.85rem; }
-        .msg-player { border-left: 3px solid var(--accent-color); background: #0a1a0a; }
-        .msg-admin { border-left: 3px solid var(--admin-color); background: #150a1a; text-align: right; }
-
-        .ticket-item {
-            border: 1px solid #222; padding: 15px; margin-bottom: 10px; cursor: pointer;
-        }
-        .ticket-item:hover { border-color: var(--accent-color); }
+        .chat-box { height: 200px; overflow-y: auto; background: #050505; padding: 10px; border: 1px solid #222; }
+        .msg { margin-bottom: 8px; padding: 5px; font-size: 0.85rem; border-left: 2px solid #444; }
+        .msg-admin { border-color: var(--admin); color: #b388ff; }
+        
+        .user-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #111; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
     </style>
 </head>
-<body onclick="closeDropdown()">
+<body onclick="document.getElementById('profileDropdown').style.display='none'">
 
     <div class="top-bar">
-        <div id="userProfile" class="profile-trigger" onclick="toggleDropdown(event)">?</div>
-        <div id="profileDropdown" class="profile-dropdown">
-            <h4 id="dropName" style="margin:0">User</h4>
-            <p id="dropTeam" style="color: #666; font-size: 0.8rem;">Team: -</p>
-            <hr style="border:0; border-top:1px solid #222; margin: 15px 0;">
-            <button onclick="showPage('pageChats')" style="margin-bottom: 10px;">Meine Chats</button>
-            <button onclick="logout()" style="border-color: #e74c3c; color: #e74c3c;">Logout</button>
+        <div id="userProfile" class="profile-trigger" onclick="event.stopPropagation(); toggleDrop()">?</div>
+        <div id="profileDropdown" class="dropdown">
+            <strong id="dropName">User</strong>
+            <p id="dropTeam" style="font-size:0.7rem; color:#666">Team: -</p>
+            <button onclick="showPage('pageChats')">Meine Chats</button>
+            <button onclick="location.reload()" style="margin-top:5px; border-color:#e74c3c; color:#e74c3c">Logout</button>
         </div>
     </div>
 
     <div id="pageLogin" class="page active">
         <div class="section">
-            <h1>Access Control</h1>
+            <h2>System Login</h2>
             <input type="text" id="loginUser" placeholder="Username">
             <input type="password" id="loginPass" placeholder="Password">
-            <button onclick="attemptLogin()">Authorize</button>
-            <p style="text-align:center; font-size: 0.8rem; margin-top: 20px;">
-                Kein Zugang? <a href="#" onclick="showPage('pageRegister')" style="color:var(--accent-color)">Registrieren</a>
-            </p>
+            <button onclick="login()">Authorize</button>
+            <p style="font-size:0.7rem; text-align:center">Kein Account? <a href="#" onclick="showPage('pageRegister')" style="color:var(--accent)">Registrieren</a></p>
         </div>
     </div>
 
     <div id="pageRegister" class="page">
         <div class="section">
-            <h1 id="regTitle">New Identity</h1>
-            <input type="text" id="regUser" placeholder="Username">
-            <input type="password" id="regPass" placeholder="Password">
-            <button id="regBtn" onclick="register()">Create Account</button>
-            <button onclick="showPage('pageLogin')" style="margin-top:10px; border-color:#555; color:#555;">Abbrechen</button>
+            <h2>Registrierung</h2>
+            <input type="text" id="regUser" placeholder="Wunschname">
+            <input type="password" id="regPass" placeholder="Passwort">
+            <button onclick="register()">Konto erstellen</button>
+            <button onclick="showPage('pageLogin')" style="border:none">Abbrechen</button>
         </div>
     </div>
 
-    <div id="pageChats" class="page">
+    <div id="pagePlayer" class="page">
         <div class="section">
-            <h1>Support Nachrichten</h1>
-            <div id="chatList">Lade Tickets...</div>
-            <button onclick="goBack()" style="margin-top:20px;">Zurück</button>
+            <h2>Regeln</h2>
+            <div id="displayRegeln" style="white-space: pre-wrap; font-size: 0.9rem;"></div>
         </div>
-    </div>
-
-    <div id="pageChatView" class="page">
         <div class="section">
-            <h2 id="chatWith">Chat</h2>
-            <div id="chatMessages" class="chat-container"></div>
-            <textarea id="chatInput" placeholder="Nachricht schreiben..."></textarea>
-            <button onclick="sendMessage()">Senden</button>
-            <button onclick="showPage('pageChats')" style="margin-top:10px; border-color:#555; color:#555;">Zurück</button>
-        </div>
-    </div>
-
-    <div id="pageMain" class="page">
-        <div class="section">
-            <h2>System Status: Online</h2>
-            <p>Willkommen im Mod-Zentrum.</p>
-            <button onclick="showPage('pageChatView'); startNewTicket();">Neues Support-Ticket</button>
+            <h2>Support Ticket erstellen</h2>
+            <textarea id="playerTicketText" placeholder="Beschreibe dein Problem..."></textarea>
+            <button onclick="createTicket()">Support senden</button>
         </div>
     </div>
 
     <div id="pageAdmin" class="page">
         <div class="section">
-            <h1>Admin Interface</h1>
-            <div id="adminTicketList"></div>
+            <h2>Regeln verwalten</h2>
+            <textarea id="adminRegelnInput" rows="5" placeholder="Schreibe hier die Regeln rein..."></textarea>
+            <button onclick="saveRegeln()">Regeln Speichern</button>
+        </div>
+        <div class="section">
+            <h2>Offene Tickets</h2>
+            <div id="adminOpenTickets"></div>
+        </div>
+        <div class="section">
+            <h2>Account Verwaltung & Teams</h2>
+            <div id="adminUserList"></div>
+        </div>
+    </div>
+
+    <div id="pageChats" class="page">
+        <div class="section">
+            <h2>Deine Support-Chats</h2>
+            <div id="chatList"></div>
+            <button onclick="goBack()" style="margin-top:10px">Zurück</button>
+        </div>
+    </div>
+
+    <div id="pageSingleChat" class="page">
+        <div class="section">
+            <h2 id="chatHeader">Chat</h2>
+            <div id="chatContent" class="chat-box"></div>
+            <input type="text" id="chatInput" placeholder="Nachricht...">
+            <button onclick="sendMsg()">Senden</button>
+            <button onclick="showPage('pageChats')" style="border:none">Zurück zur Liste</button>
         </div>
     </div>
 
     <script>
         let users = JSON.parse(localStorage.getItem('users')) || [];
         let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
-        let adminPass = localStorage.getItem('adminPass') || "1234";
+        let regeln = localStorage.getItem('projektRegeln') || "Keine Regeln definiert.";
         let currentUser = null;
-        let activeTicketId = null;
+        let activeChatId = null;
 
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'pageChats' || id === 'pageAdmin') renderLists();
+            refreshData();
+        }
+
+        function refreshData() {
+            document.getElementById('displayRegeln').innerText = regeln;
+            if(currentUser?.isAdmin) {
+                document.getElementById('adminRegelnInput').value = regeln;
+                renderAdminUsers();
+                renderAdminOpenTickets();
+            }
+            renderChatList();
+        }
+
+        function login() {
+            const u = document.getElementById('loginUser').value;
+            const p = document.getElementById('loginPass').value;
+            const adminPw = localStorage.getItem('adminPass') || "1234";
+
+            if(u.toLowerCase() === "admin" && p === adminPw) {
+                currentUser = {name: "Admin", isAdmin: true, team: "Leitung"};
+                enterSystem("pageAdmin");
+            } else {
+                const found = users.find(x => x.name === u && x.pass === p);
+                if(found) {
+                    currentUser = found;
+                    found.online = true;
+                    saveUsers();
+                    enterSystem("pagePlayer");
+                } else { alert("Login falsch"); }
+            }
+        }
+
+        function enterSystem(page) {
+            showPage(page);
+            const p = document.getElementById('userProfile');
+            p.innerText = currentUser.name[0].toUpperCase();
+            p.style.display = "flex";
+            document.getElementById('dropName').innerText = currentUser.name;
+            document.getElementById('dropTeam').innerText = "Team: " + (currentUser.team || "Keines");
         }
 
         function register() {
             const u = document.getElementById('regUser').value;
             const p = document.getElementById('regPass').value;
-            
-            // ADMIN PASSWORT ÄNDERN TRICK
             if(u.toLowerCase() === "admin" && !p) {
-                const newPw = prompt("Neues Admin-Passwort festlegen:");
-                if(newPw) {
-                    localStorage.setItem('adminPass', newPw);
-                    adminPass = newPw;
-                    alert("Admin-Passwort aktualisiert!");
-                }
+                const newP = prompt("Neues Admin-PW:");
+                if(newP) localStorage.setItem('adminPass', newP);
                 return;
             }
-
             if(!u || !p) return;
-            users.push({name: u, pass: p, team: "Vulkan"});
-            localStorage.setItem('users', JSON.stringify(users));
-            alert("Erfolgreich registriert!");
+            users.push({name: u, pass: p, team: "Vulkan", online: false});
+            saveUsers();
+            alert("Registriert!");
             showPage('pageLogin');
         }
 
-        function attemptLogin() {
-            const u = document.getElementById('loginUser').value;
-            const p = document.getElementById('loginPass').value;
-
-            if(u === "Admin" && p === adminPass) {
-                currentUser = {name: "Admin", isAdmin: true};
-                loginSuccess("pageAdmin");
-            } else {
-                const found = users.find(user => user.name === u && user.pass === p);
-                if(found) {
-                    currentUser = {...found, isAdmin: false};
-                    loginSuccess("pageMain");
-                } else {
-                    alert("Login fehlgeschlagen.");
-                }
-            }
+        function saveRegeln() {
+            regeln = document.getElementById('adminRegelnInput').value;
+            localStorage.setItem('projektRegeln', regeln);
+            alert("Regeln gespeichert!");
         }
 
-        function loginSuccess(targetPage) {
-            showPage(targetPage);
-            const trigger = document.getElementById('userProfile');
-            trigger.innerText = currentUser.name.charAt(0).toUpperCase();
-            trigger.style.display = "flex";
-            document.getElementById('dropName').innerText = currentUser.name;
+        function renderAdminUsers() {
+            const list = document.getElementById('adminUserList');
+            list.innerHTML = users.map(u => `
+                <div class="user-row">
+                    <span><span class="status-dot" style="background:${u.online ? 'var(--online)':'var(--offline)'}"></span>${u.name}</span>
+                    <select onchange="updateTeam('${u.name}', this.value)">
+                        <option ${u.team==='Vulkan'?'selected':''}>Vulkan</option>
+                        <option ${u.team==='Schloss'?'selected':''}>Schloss</option>
+                    </select>
+                </div>
+            `).join("");
         }
 
-        function startNewTicket() {
+        function updateTeam(name, team) {
+            const u = users.find(x => x.name === name);
+            u.team = team;
+            saveUsers();
+        }
+
+        function createTicket() {
+            const text = document.getElementById('playerTicketText').value;
+            if(!text) return;
             const id = Date.now();
-            const newT = {id: id, player: currentUser.name, messages: [], status: "Open", admin: ""};
-            tickets.push(newT);
-            activeTicketId = id;
-            updateChatUI();
+            tickets.push({id: id, player: currentUser.name, msgs: [{s: currentUser.name, t: text}], status: "Offen", claimedBy: ""});
+            localStorage.setItem('tickets', JSON.stringify(tickets));
+            document.getElementById('playerTicketText').value = "";
+            alert("Support gesendet! Du findest den Chat im Profilmenü.");
         }
 
-        function renderLists() {
-            const list = currentUser.isAdmin ? document.getElementById('adminTicketList') : document.getElementById('chatList');
-            const myTickets = currentUser.isAdmin ? tickets : tickets.filter(t => t.player === currentUser.name);
-            
-            list.innerHTML = myTickets.length === 0 ? "Keine Chats vorhanden." : 
-                myTickets.map(t => `
-                    <div class="ticket-item" onclick="openChat(${t.id})">
-                        <strong>Ticket #${t.id}</strong><br>
-                        Spieler: ${t.player} | Status: ${t.status}
-                    </div>
-                `).join("");
+        function renderAdminOpenTickets() {
+            const div = document.getElementById('adminOpenTickets');
+            const open = tickets.filter(t => !t.claimedBy);
+            div.innerHTML = open.length ? open.map(t => `
+                <div class="section" style="border-color:var(--admin)">
+                    <strong>Von ${t.player}</strong>: ${t.msgs[0].t}<br>
+                    <button onclick="claimTicket(${t.id})">Ticket Claimen</button>
+                </div>
+            `).join("") : "Keine neuen Tickets.";
+        }
+
+        function claimTicket(id) {
+            const t = tickets.find(x => x.id === id);
+            t.claimedBy = "Admin";
+            t.status = "In Bearbeitung";
+            localStorage.setItem('tickets', JSON.stringify(tickets));
+            openChat(id);
+        }
+
+        function renderChatList() {
+            const div = document.getElementById('chatList');
+            const my = currentUser?.isAdmin ? tickets.filter(t => t.claimedBy) : tickets.filter(t => t.player === currentUser?.name);
+            div.innerHTML = my.map(t => `
+                <div class="section" onclick="openChat(${t.id})" style="cursor:pointer">
+                    Chat mit ${currentUser.isAdmin ? t.player : 'Support'} (ID: ${t.id})
+                </div>
+            `).join("");
         }
 
         function openChat(id) {
-            activeTicketId = id;
-            showPage('pageChatView');
-            updateChatUI();
-        }
-
-        function updateChatUI() {
-            const t = tickets.find(x => x.id === activeTicketId);
-            document.getElementById('chatWith').innerText = "Chat mit " + (currentUser.isAdmin ? t.player : "Support");
-            const box = document.getElementById('chatMessages');
-            box.innerHTML = t.messages.map(m => `
-                <div class="msg ${m.role === 'admin' ? 'msg-admin' : 'msg-player'}">
-                    <strong>${m.sender}:</strong><br>${m.text}
+            activeChatId = id;
+            showPage('pageSingleChat');
+            const t = tickets.find(x => x.id === id);
+            document.getElementById('chatHeader').innerText = "Chat: " + t.player;
+            document.getElementById('chatContent').innerHTML = t.msgs.map(m => `
+                <div class="msg ${m.s === 'Admin' ? 'msg-admin' : ''}">
+                    <strong>${m.s}:</strong> ${m.t}
                 </div>
             `).join("");
-            box.scrollTop = box.scrollHeight;
         }
 
-        function sendMessage() {
-            const txt = document.getElementById('chatInput').value;
-            if(!txt) return;
-            const t = tickets.find(x => x.id === activeTicketId);
-            t.messages.push({
-                sender: currentUser.name,
-                role: currentUser.isAdmin ? 'admin' : 'player',
-                text: txt
-            });
-            if(currentUser.isAdmin) {
-                t.status = "In Bearbeitung";
-                t.admin = currentUser.name;
-            }
+        function sendMsg() {
+            const val = document.getElementById('chatInput').value;
+            if(!val) return;
+            const t = tickets.find(x => x.id === activeChatId);
+            t.msgs.push({s: currentUser.name, t: val});
             localStorage.setItem('tickets', JSON.stringify(tickets));
             document.getElementById('chatInput').value = "";
-            updateChatUI();
+            openChat(activeChatId);
         }
 
-        function toggleDropdown(e) { e.stopPropagation(); const d = document.getElementById('profileDropdown'); d.style.display = d.style.display === "block" ? "none" : "block"; }
-        function closeDropdown() { document.getElementById('profileDropdown').style.display = "none"; }
-        function logout() { location.reload(); }
-        function goBack() { showPage(currentUser.isAdmin ? 'pageAdmin' : 'pageMain'); }
+        function toggleDrop() { const d = document.getElementById('profileDropdown'); d.style.display = d.style.display==='block'?'none':'block'; }
+        function goBack() { showPage(currentUser.isAdmin ? 'pageAdmin' : 'pagePlayer'); }
+        function saveUsers() { localStorage.setItem('users', JSON.stringify(users)); }
     </script>
 </body>
 </html>
